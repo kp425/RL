@@ -1,5 +1,6 @@
 import numpy as np
 from multiprocessing import Process, Pipe
+import gym
 
 def worker(remote, parent_remote, env_fn_wrapper):
     parent_remote.close()
