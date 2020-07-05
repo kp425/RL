@@ -1,5 +1,6 @@
 import math
 import matplotlib.pyplot as plt
+import statistics
 from IPython.display import clear_output
 
 class Datapoint:
@@ -7,9 +8,13 @@ class Datapoint:
         self.x = []
         self.y = []
         self.name = name
+
     def collect(self, x_,y_):
         self.x.append(x_)
         self.y.append(y_)
+
+    def avg(self):
+       return statistics.mean(self.x), statistics.mean(self.y)
 
 
 def plot(data, graphs_per_row = 2, figsize = (10,10), gap=(0.2,0.5)):  #data is list of Datapoints
