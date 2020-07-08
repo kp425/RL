@@ -57,7 +57,6 @@ class BoltzmannPolicy(CSerializable):
             self.__net = net
         else:
             if model_path is not None:
-                self.__net = self.load()
                 try:
                     self.__net = self.load()
                     print("Loaded from path")
