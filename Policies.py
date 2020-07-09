@@ -143,7 +143,7 @@ class GaussianPolicy(Policy):
             state = tf.reshape(state, shape = [-1,*state.shape])
         mean, std, value = self._net(state)
         dist = tfp.distributions.Normal(mean, std)
-        action = tf.clip_by_value(dist.sample(), env.action_space.low,env.action_space.high)
+        action = tf.clip_by_value(dist.sample(), action_spec.low, action_spec.high)
         return action, dist, value
 
 
