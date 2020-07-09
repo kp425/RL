@@ -4,7 +4,6 @@ import tensorflow_probability as tfp
 import gym
 
 
-
 def mlp_net_boltzmann(input_shape, n_outputs):
     
     inputs = Input(shape = input_shape)
@@ -121,7 +120,7 @@ class BoltzmannPolicy(Policy):
 
         self.state_spec = state_spec
         self.action_spec = action_spec
-        super(BoltzmannPolicy, self).__init__(state_spec.shape, action_spec.n, 
+        super(BoltzmannPolicy, self).__init__(self.state_spec.shape, self.action_spec.n, 
                                               net = net, model_path= model_path)
 
     def __call__(self, state):
@@ -143,7 +142,7 @@ class GaussianPolicy(Policy):
             state = tf.reshape(state, shape = [-1,*state.shape])
         mean, std, value = self._net(state)
         dist = tfp.distributions.Normal(mean, std)
-        action = tf.clip_by_value(dist.sample(), action_spec.low, action_spec.high)
+        action = tf.clip_by_value(dist.sample(), self.action_spec.low, self.action_spec.high)
         return action, dist, value
 
 
@@ -157,7 +156,5 @@ def make_policy(state_spec, action_spec, save_path = None):
     elif isinstance(action_spec, gym.spaces.Box):
         return GaussianPolicy(state_spec, action_spec, net = mlp_net_gaussian,
                              model_path = save_path)
-
-
 
 
