@@ -1,6 +1,7 @@
 import tensorflow as tf
 from tensorflow.keras import layers, Model, Input, Sequential
 import tensorflow_probability as tfp
+import gym
 
 
 
