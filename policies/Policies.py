@@ -2,7 +2,7 @@ import tensorflow as tf
 import tensorflow_probability as tfp
 import gym
 
-from RL.networks.Network import *
+from RL.networks.Networks import *
 
 class CSerializable:
 
