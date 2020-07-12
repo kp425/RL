@@ -94,15 +94,17 @@ class GaussianPolicy(Policy):
         return action, dist, value
 
 
-def make_policy(state_spec, action_spec, save_path = None):
-    
+def make_policy(state_spec, action_spec, net = None, save_path = None):
+
     if isinstance(action_spec, gym.spaces.Discrete):
         
-        return BoltzmannPolicy(state_spec, action_spec, net = mlp_net_boltzmann,
+        if net == None: net = mlp_net_boltzmann
+        return BoltzmannPolicy(state_spec, action_spec, net = net,
                                model_path = save_path)
 
     elif isinstance(action_spec, gym.spaces.Box):
-        return GaussianPolicy(state_spec, action_spec, net = mlp_net_gaussian,
+        if net == None: net = mlp_net_gaussian
+        return GaussianPolicy(state_spec, action_spec, net = net,
                              model_path = save_path)
 
 
