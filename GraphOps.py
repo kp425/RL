@@ -13,9 +13,13 @@ class Datapoint:
         self.x.append(x_)
         self.y.append(y_)
 
-    def avg(self):
-       return statistics.mean(self.x), statistics.mean(self.y)
-
+    def avg_x(self,from_index = None , to_index = None):
+        x = self.x[from_index:to_index]
+        return statistics.mean(x)
+    
+    def avg_y(self,from_index = None , to_index = None):
+        y = self.y[from_index:to_index]
+        return statistics.mean(y)
 
 def plot(data, graphs_per_row = 2, figsize = (10,10), gap=(0.2,0.5)):  #data is list of Datapoints
     
