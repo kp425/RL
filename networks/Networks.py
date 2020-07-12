@@ -2,6 +2,7 @@ import tensorflow as tf
 from tensorflow.keras import layers, Model, Input, Sequential
 
 
+#Default nets used when no nets are provided
 
 def mlp_net_boltzmann(input_shape, n_outputs):
     
@@ -48,8 +49,8 @@ def mlp_net_gaussian(input_shape, n_outputs):
     for v_layer in value_layers:
         v_inputs = v_layer(v_inputs)
     
-    mean = layers.Dense(1, activation = tf.nn.softmax, name = "mean")(p_inputs) 
-    std = layers.Dense(1, activation = tf.nn.softmax, name = "std")(p_inputs)
+    mean = layers.Dense(1, activation = tf.nn.tanh, name = "mean")(p_inputs) 
+    std = layers.Dense(1, activation = tf.nn.softplus, name = "std")(p_inputs)
     value_head = layers.Dense(1, activation = tf.nn.tanh, name = "value_head")(v_inputs)
     model = Model(inputs = [inputs], outputs = [mean, std, value_head])
 
