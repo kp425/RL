@@ -1,6 +1,9 @@
 import numpy as np
 from multiprocessing import Process, Pipe
+from collections import deque
 import gym
+from gym import spaces
+import cv2
 
 def worker(remote, parent_remote, env_fn_wrapper):
     parent_remote.close()
@@ -150,8 +153,96 @@ class SubprocVecEnv(VecEnv):
     def __len__(self):
         return self.nenvs
 
+class WarpFrame(gym.ObservationWrapper):
+    def __init__(self, env, width=84, height=84, grayscale=True, dict_space_key=None):
+        """
+        Warp frames to 84x84 as done in the Nature paper and later work.
+        If the environment uses dictionary observations, `dict_space_key` can be specified which indicates which
+        observation should be warped.
+        """
+        super().__init__(env)
+        self._width = width
+        self._height = height
+        self._grayscale = grayscale
+        self._key = dict_space_key
+        if self._grayscale:
+            num_colors = 1
+        else:
+            num_colors = 3
+
+        new_space = gym.spaces.Box(
+            low=0,
+            high=255,
+            shape=(self._height, self._width, num_colors),
+            dtype=np.uint8,
+        )
+        if self._key is None:
+            original_space = self.observation_space
+            self.observation_space = new_space
+        else:
+            original_space = self.observation_space.spaces[self._key]
+            self.observation_space.spaces[self._key] = new_space
+        assert original_space.dtype == np.uint8 and len(original_space.shape) == 3
+
+    def observation(self, obs):
+        if self._key is None:
+            frame = obs
+        else:
+            frame = obs[self._key]
+
+        if self._grayscale:
+            frame = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+        frame = cv2.resize(
+            frame, (self._width, self._height), interpolation=cv2.INTER_AREA
+        )
+        if self._grayscale:
+            frame = np.expand_dims(frame, -1)
+
+        if self._key is None:
+            obs = frame
+        else:
+            obs = obs.copy()
+            obs[self._key] = frame
+        return obs
+
+
+
+class VecFrameStack(VecEnv):
+    def __init__(self, venv, nstack):
+        self.venv = venv
+        self.nstack = nstack
+        wos = venv.observation_space  # wrapped ob space
+        low = np.repeat(wos.low, self.nstack, axis=-1)
+        high = np.repeat(wos.high, self.nstack, axis=-1)
+        self.stackedobs = np.zeros((venv.num_envs,) + low.shape, low.dtype)
+        observation_space = spaces.Box(low=low, high=high, dtype=venv.observation_space.dtype)
+        action_space = None
+        VecEnv.__init__(self, venv, observation_space=observation_space, action_space = action_space)
+
+    def step_wait(self):
+        obs, rews, news, infos = self.venv.step_wait()
+        self.stackedobs = np.roll(self.stackedobs, shift=-1, axis=-1)
+        for (i, new) in enumerate(news):
+            if new:
+                self.stackedobs[i] = 0
+        self.stackedobs[..., -obs.shape[-1]:] = obs
+        return self.stackedobs, rews, news, infos
+
+    def reset(self):
+        obs = self.venv.reset()
+        self.stackedobs[...] = 0
+        self.stackedobs[..., -obs.shape[-1]:] = obs
+        return self.stackedobs
+
 def make_env(env_name):
     def _thunk():
         env = gym.make(env_name)
+        return env
+    return _thunk
+
+def make_atari_env(env_name, width = 84, height = 84, grayscale = True):
+    def _thunk():
+        env = gym.make(env_name)
+        env = WarpFrame(env, width = width, height = height, grayscale = grayscale)
         return env
     return _thunk
