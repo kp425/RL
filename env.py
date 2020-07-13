@@ -216,7 +216,7 @@ class VecFrameStack(VecEnv):
         high = np.repeat(wos.high, self.nstack, axis=-1)
         self.stackedobs = np.zeros((venv.num_envs,) + low.shape, low.dtype)
         observation_space = spaces.Box(low=low, high=high, dtype=venv.observation_space.dtype)
-        action_space = None
+        action_space = venv.action_space
         VecEnv.__init__(self, venv, observation_space=observation_space, action_space = action_space)
 
     def step_wait(self):
